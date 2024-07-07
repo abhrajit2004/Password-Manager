@@ -1,6 +1,11 @@
 import React from 'react'
 
 const Navbar = () => {
+
+  const jumpToGithub = ()=>{
+    window.open('https://github.com/abhrajit2004')
+  }
+
   return (
     <nav className='bg-slate-800 text-white'>
         <div className="mycontainer flex justify-between items-center px-4 py-5 h-14">
@@ -17,10 +22,10 @@ const Navbar = () => {
                 <a className='hover:font-bold' href='#'>Contact</a>
             </li>
         </ul> */}
-        <a href='https://github.com/abhrajit2004' target='_blank' className='text-white bg-green-700 my-5 rounded-full flex gap-2 justify-between items-center'>
+        <button onClick={()=>jumpToGithub()} className='text-white bg-green-700 my-5 rounded-full flex gap-2 justify-between items-center ring-white ring-1'>
           <img className="invert w-10 p-1" src="icons/github.png" alt="github logo" />          
           <span className='font-bold px-2'>GitHub</span>
-        </a>
+        </button>
         </div>
     </nav>
   )

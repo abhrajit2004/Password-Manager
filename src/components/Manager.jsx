@@ -1,8 +1,14 @@
 import React from 'react'
 import { useState, useRef, useEffect } from 'react'
+import { FaCopy } from "react-icons/fa";
+import { ToastContainer, toast } from 'react-toastify';
+import { v4 as uuidv4 } from 'uuid';
+
+import 'react-toastify/dist/ReactToastify.css';
 
 const Manager = () => {
     const ref = useRef()
+    const passwordRef = useRef()
     const [form, setForm] = useState({site: "", username: "", password: ""})
     const [passwordArray, setPasswordArray] = useState([])
 
@@ -12,13 +18,30 @@ const Manager = () => {
           setPasswordArray(JSON.parse(passwords))
         }
     }, [])
+
+    const copyText = (text)=>{
+      toast('Copied to clipboard!', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
+      navigator.clipboard.writeText(text)
+    }
     
 
     const showPassword = ()=>{
+      passwordRef.current.type="text"
         if(ref.current.src.includes("icons/eyecross.svg")){
+            passwordRef.current.type="password"
             ref.current.src = "icons/eye.svg"
         }
         else{
+            passwordRef.current.type="text"
             ref.current.src = "icons/eyecross.svg"
         }
     }
@@ -28,17 +51,64 @@ const Manager = () => {
     }
 
     const savePassword = () => {
-      setPasswordArray([...passwordArray, form])
-      localStorage.setItem("passwords", JSON.stringify([...passwordArray, form]))
-      console.log([...passwordArray, form])
+      // toast('Password saved!', {
+      //   position: "top-right",
+      //   autoClose: 5000,
+      //   hideProgressBar: false,
+      //   closeOnClick: true,
+      //   pauseOnHover: true,
+      //   draggable: true,
+      //   progress: undefined,
+      //   theme: "dark",
+      // });
+      if(form.site.length > 3 && form.username.length > 3 && form.password.length > 3){
+        setPasswordArray([...passwordArray, {...form, id: uuidv4()}])
+        localStorage.setItem("passwords", JSON.stringify([...passwordArray, {...form, id: uuidv4()}]))
+        console.log([...passwordArray, form])
+        setForm({site: "", username: "", password: ""})
+      }
+      else{
+        toast("Error: Password not saved!",{theme:"dark"});
+      }
+    }
+
+    const editPassword = (id) => {
+      console.log("Editing password with id ", id)
+      setForm(passwordArray.filter(item=>item.id===id)[0])
+      setPasswordArray(passwordArray.filter(item=>item.id!==id))
+    }
+
+    const deletePassword = (id) => {
+      let c = confirm("Do you really want to delete this password?")
+      if(c){
+        console.log("Deleting password with id ", id)
+        setPasswordArray(passwordArray.filter(item=>item.id!==id))
+        localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item=>item.id!==id)))
+      }
     }
     
     
 
   return (
     <>
+        <ToastContainer
+    position="top-right"
+    autoClose={5000}
+    hideProgressBar={false}
+    newestOnTop={false}
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="dark"
+    transition= "Bounce"
+    />
+    {/* Same as */}
+    <ToastContainer />
+
       <div className= "bg-green-50 min-h-screen">
-     <div className="mycontainer">
+     <div className="p-3 md:mycontainer">
         <h1 className='text-4xl font-bold text-center'>
         <span className='text-green-500'>&lt;</span>
             Pass
@@ -47,12 +117,12 @@ const Manager = () => {
         <p className='text-green-900 text-lg text-center'>Your own Password Manager</p>
 
         <div className="flex flex-col p-4 gap-8 items-center">
-        <input value={form.site} onChange={handleChange} placeholder='Enter website URL' className='rounded-full border border-green-500 w-full p-4 py-1' type="text" name="site" id="" />
-          <div className="flex w-full justify-between gap-8">
-          <input value={form.username} onChange={handleChange} placeholder='Enter Username' className='rounded-full border border-green-500 w-full p-4 py-1' type="text" name="username" id="" />
+        <input value={form.site} onChange={handleChange} placeholder='Enter website URL' className='rounded-full border border-green-500 w-full p-4 py-1' type="text" name="site" id="site" />
+          <div className="flex flex-col md:flex-row w-full justify-between gap-8">
+          <input value={form.username} onChange={handleChange} placeholder='Enter Username' className='rounded-full border border-green-500 w-full p-4 py-1' type="text" name="username" id="username" />
 
           <div className="relative">
-          <input value={form.password} onChange={handleChange} placeholder='Enter Password' className='rounded-full border border-green-500 w-full p-4 py-1' type="text" name="password" id="" />
+          <input ref={passwordRef} value={form.password} onChange={handleChange} placeholder='Enter Password' className='rounded-full border border-green-500 w-full p-4 py-1' type="password" name="password" id="password" />
           <span className='absolute right-0 top-0 cursor-pointer' onClick={showPassword}>
             <img ref={ref} className='p-1' width={35} src="icons/eye.svg" alt="" />
           </span>
@@ -65,7 +135,7 @@ const Manager = () => {
             src="https://cdn.lordicon.com/jgnvfzqg.json"
             trigger="hover">
         </lord-icon>
-          Add Password
+          Save
         </button>
         </div>
 
@@ -79,14 +149,54 @@ const Manager = () => {
                     <th className='py-2'>Site</th>
                     <th className='py-2'>Username</th>
                     <th className='py-2'>Password</th>
+                    <th className='py-2'>Actions</th>
                     </tr>
                     </thead>
                    <tbody className='bg-green-100'>
                     {passwordArray.map((item, index)=>{
                       return <tr key={index}>
-                        <td className='py-2 border border-white text-center w-32'><a href={item.site} target='_blank'>{item.site}</a></td>
-                        <td className='py-2 border border-white text-center w-32'>{item.username}</td>
-                        <td className='py-2 border border-white text-center w-32'>{item.password}</td>
+                        <td className='py-2 border border-white text-center'>
+                          <div className='flex justify-center items-center'>
+                          <a href={item.site} target='_blank'>{item.site}</a>
+                          <div className='lordiconcopy size-7 cursor-pointer' onClick={()=>{copyText(item.site)}}>
+                          <lord-icon style={{"width":"25px","height":"25px", "paddingTop" : "3px", "paddingLeft" : "3px"}} src="https://cdn.lordicon.com/iykgtsbt.json" trigger="hover">
+                          </lord-icon>
+                          </div>
+                          </div>
+                        </td>
+
+                        <td className='py-2 border border-white text-center'>
+                          <div className='flex justify-center items-center'>
+                             <span>{item.username}</span>
+                            <div className='lordiconcopy size-7 cursor-pointer' onClick={()=>{copyText(item.username)}}>
+                          <lord-icon style={{"width":"25px","height":"25px", "paddingTop" : "3px", "paddingLeft" : "3px"}} src="https://cdn.lordicon.com/iykgtsbt.json" trigger="hover">
+                          </lord-icon>
+                          </div>
+                          </div>
+                        </td>
+                        
+                        <td className='py-2 border border-white text-center'>
+                           <div className='flex justify-center items-center'>
+                             <span>{"*".repeat(item.password.length)}</span>
+                             <div className='lordiconcopy size-7 cursor-pointer' onClick={()=>{copyText(item.password)}}>
+                             <lord-icon style={{"width":"25px","height":"25px", "paddingTop" : "3px", "paddingLeft" : "3px"}} src="https://cdn.lordicon.com/iykgtsbt.json" trigger="hover">
+                             </lord-icon>
+                             </div>
+                          </div>
+                        </td>
+
+                        <td className='py-2 border border-white text-center'>
+                           <span className='cursor-pointer mx-1' onClick={()=>editPassword(item.id)}>
+                           <lord-icon style={{"width":"25px","height":"25px"}} src="https://cdn.lordicon.com/gwlusjdu.json" trigger="hover">
+                           </lord-icon>
+                           </span>
+                           <span className='cursor-pointer mx-1' onClick={()=>deletePassword(item.id)}>
+                           <lord-icon src="https://cdn.lordicon.com/skkahier.json"
+                              trigger="hover"
+                              style={{"width":"25px","height":"25px"}}>
+                          </lord-icon>
+                           </span>
+                        </td>
                       </tr>
                      })}
                 </tbody>
