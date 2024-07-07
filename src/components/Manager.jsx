@@ -51,21 +51,12 @@ const Manager = () => {
     }
 
     const savePassword = () => {
+
       if(form.site.length > 3 && form.username.length > 3 && form.password.length > 3){
         setPasswordArray([...passwordArray, {...form, id: uuidv4()}])
         localStorage.setItem("passwords", JSON.stringify([...passwordArray, {...form, id: uuidv4()}]))
         console.log([...passwordArray, form])
         setForm({site: "", username: "", password: ""})
-        toast('Password saved!', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "dark",
-        });
       }
       else{
         toast("Error: Password not saved!",{theme:"dark"});
@@ -84,16 +75,6 @@ const Manager = () => {
         console.log("Deleting password with id ", id)
         setPasswordArray(passwordArray.filter(item=>item.id!==id))
         localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item=>item.id!==id)))
-        toast('Password deleted!', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "dark",
-        });
       }
     }
     
